@@ -13,7 +13,6 @@ import EnrollmentRoutes from "./Kanbas/Enrollments/routes.js";
 const CONNECTION_STRING =
   process.env.MONGO_CONNECTION_STRING || "mongodb://127.0.0.1:27017/kanbas";
 
-// Database connection
 mongoose
   .connect(CONNECTION_STRING)
   .then(() => console.log("Connected to MongoDB"))
@@ -24,7 +23,6 @@ mongoose
 
 const app = express();
 
-// CORS configuration
 app.use(
   cors({
     credentials: true,
@@ -32,26 +30,20 @@ app.use(
   })
 );
 
-// Session configuration
+app.use(express.json()); 
+
 const sessionOptions = {
   secret: process.env.SESSION_SECRET || "kanbas",
   resave: false,
   saveUninitialized: false,
+  cookie: {
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  },
 };
 
-if (process.env.NODE_ENV === "production") {
-  sessionOptions.proxy = true;
-  sessionOptions.cookie = {
-    sameSite: "none",
-    secure: true,
-    domain: process.env.NODE_SERVER_DOMAIN || undefined, // Ensure this is correctly set
-  };
-}
-
 app.use(session(sessionOptions));
-app.use(express.json());
 
-// Route handlers
 Lab5(app);
 UserRoutes(app);
 CourseRoutes(app);
@@ -59,13 +51,6 @@ ModuleRoutes(app);
 AssignmentRoutes(app);
 EnrollmentRoutes(app);
 
-// Catch-all error handler
-app.use((err, req, res, next) => {
-  console.error("Error:", err.message);
-  res.status(500).json({ error: "Internal Server Error" });
-});
-
-// Start server
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

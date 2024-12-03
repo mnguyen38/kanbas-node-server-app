@@ -1,23 +1,17 @@
-import Database from "../Database/index.js";
-export function enrollUserInCourse(userId, courseId) {
-  const { enrollments } = Database;
-  enrollments.push({ _id: Date.now(), user: userId, course: courseId });
+import model from "./model.js";
+
+export async function findCoursesForUser(userId) {
+ const enrollments = await model.find({ user: userId }).populate("course");
+ return enrollments.map((enrollment) => enrollment.course);
 }
-export function findEnrollmentsForUser(userId) {
-  return Database.enrollments.filter((enrollment) => enrollment.user === userId);
+export async function findUsersForCourse(courseId) {
+ const enrollments = await model.find({ course: courseId }).populate("user");
+ return enrollments.map((enrollment) => enrollment.user);
 }
-export function addEnrollment(enrollment) {
-  const newEnrollment = { ...enrollment, _id: Date.now().toString() };
-  Database.enrollments.push(newEnrollment);
-  return newEnrollment;
+
+export function enrollUserInCourse(user, course) {
+ return model.create({ user, course });
 }
-export function removeEnrollment(userId, courseId) {
-  const index = Database.enrollments.findIndex(
-    (enrollment) => enrollment.user === userId && enrollment.course === courseId
-  );
-  if (index !== -1) {
-    Database.enrollments.splice(index, 1);
-    return true;
-  }
-  return false;
+export function unenrollUserFromCourse(user, course) {
+ return model.deleteOne({ user, course });
 }
